@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: jellyfin
+  name: jellyfin
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jellyfin
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: jellyfin
+    spec:
+      containers:
+      - image: lscr.io/linuxserver/jellyfin:latest
+        name: jellyfin
+        env:
+          - name: PUID
+            value: "1000"
+          - name: PGID
+            value: "1000"
+          - name: TZ
+            value: "Etc/UTC"
+        ports:
+          - containerPort: 8096
+        volumeMounts:
+          - mountPath: /config
+            name: jellyfin-pvc          
+          - mountPath: /movies
+            name: jellyfin-pvc
+      restartPolicy: Always
+      volumes:
+      - name: jellyfin-pvc
+        persistentVolumeClaim:
+          claimName: jellyfin-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: jellyfin
+  name: jellyfin-svc
+spec:
+  type: NodePort # ClusterIP
+  ports:
+  - name: "jellyfin-svc"
+    port: 8096
+    targetPort: 8096
+    nodePort: 32101
+  selector:
+    app: jellyfin
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: jellyfin-pvc
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: standard
+
+
