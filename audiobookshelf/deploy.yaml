@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: audio-book
+  name: audio-book
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: audio-book
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: audio-book
+    spec:
+      containers:
+      - image: ghcr.io/advplyr/audiobookshelf:latest
+        name: audio-book
+        volumeMounts:
+          - mountPath: /audiobooks
+            name: audio-book-pvc          
+          - mountPath: /podcasts
+            name: audio-book-pvc
+          - mountPath: /config
+            name: audio-book-pvc
+          - mountPath: /metadata
+            name: audio-book-pvc            
+      restartPolicy: Always
+      volumes:
+      - name: audio-book-pvc
+        persistentVolumeClaim:
+          claimName: audio-book-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: audio-book
+  name: audio-book-svc
+spec:
+  type: NodePort # ClusterIP
+  ports:
+  - name: "audio-book-svc"
+    port: 4000
+    targetPort: 80
+    nodePort: 32102
+  selector:
+    app: audio-book
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: audio-book-pvc
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: standard
+
+
