@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: kavita
+  name: kavita
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kavita
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: kavita
+    spec:
+      containers:
+      - image: jvmilazz0/kavita:latest
+        name: kavita
+        volumeMounts:
+          - mountPath: /kavita/config
+            name: kavita-pvc          
+          - mountPath: /books
+            name: kavita-pvc
+          - mountPath: /manga
+            name: kavita-pvc
+          - mountPath: /devops
+            name: kavita-pvc            
+      restartPolicy: Always
+      volumes:
+      - name: kavita-pvc
+        persistentVolumeClaim:
+          claimName: kavita-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: kavita
+  name: kavita-svc
+spec:
+  type: NodePort # ClusterIP
+  ports:
+  - name: "kavita-svc"
+    port: 5000
+    targetPort: 5000
+    nodePort: 32103
+  selector:
+    app: kavita
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: kavita-pvc
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: standard
+
+
