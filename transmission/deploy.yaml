@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: transmission
+  name: transmission
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: transmission
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: transmission
+    spec:
+      containers:
+      - image: linuxserver/transmission
+        name: transmission
+        env:
+          - name: USER
+            value: "beellz"
+          - name: PASS
+            value: "32502310"
+          - name: TZ
+            value: "Etc/UTC"
+        volumeMounts:
+          - mountPath: /config
+            name: transmission-pvc          
+          - mountPath: /download
+            name: transmission-pvc
+          - mountPath: /watch
+            name: transmission-pvc
+      restartPolicy: Always
+      volumes:
+      - name: transmission-pvc
+        persistentVolumeClaim:
+          claimName: transmission-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: transmission
+  name: transmission-svc
+spec:
+  type: NodePort # ClusterIP
+  ports:
+  - name: "transmission-svc"
+    port: 9091
+    targetPort: 9091
+    nodePort: 32104
+  selector:
+    app: transmission
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: transmission-pvc
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: standard
+
+
