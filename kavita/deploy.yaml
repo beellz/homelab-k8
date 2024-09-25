@@ -46,7 +46,7 @@ spec:
   - name: "kavita-svc"
     port: 5000
     targetPort: 5000
-    nodePort: 32103
+    nodePort: 32119
   selector:
     app: kavita
 ---
